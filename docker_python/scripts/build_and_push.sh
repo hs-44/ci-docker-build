@@ -11,7 +11,7 @@ DOCKER_IMAGE_NAME=$1
 
 echo "value of DOCKER_IMAGE_NAME is $DOCKER_IMAGE_NAME"
 
-if [ "$DOCKER_IMAGE_NAME" == "" ]
+if [ "$DOCKER_IMAGE_NAME" == "$1" ]
 then
     echo "Usage: $0 <image-name>"
     exit 1
