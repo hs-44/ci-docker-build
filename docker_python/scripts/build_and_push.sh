@@ -16,7 +16,7 @@ then
     echo "Usage: $0 <image-name>"
     exit 1
 fi
-src_dir=$CODEBUILD_SRC_DIR
+src_dir=$CODEBUILD_SRC_DIR/docker_python/scripts/build_and_push.sh
 
 # Get the account number associated with the current IAM credentials
 account=$(aws sts get-caller-identity --query Account --output text)
