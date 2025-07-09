@@ -30,6 +30,5 @@ phases:
       - printenv
       - echo `pwd`
       - tr -d '\r' < docker_python/scripts/build_and_push.sh > clean_build.sh
-      - bash clean_build.sh $DOCKER_IMAGE_NAME
-
+      - bash -c "tr -d '\r' < docker_python/scripts/build_and_push.sh | bash" $DOCKER_IMAGE_NAME
 
