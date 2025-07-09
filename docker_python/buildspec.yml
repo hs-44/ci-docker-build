@@ -21,10 +21,12 @@ phases:
       - echo "This is Codecommit Repo Name - $REPO_NAME"
       - echo "This is the CODEBUILD_SRC_DIR - $CODEBUILD_SRC_DIR"
       - echo "This is the commit id from Source Control - $CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - echo "Fixing incorrect command syntax in script..."
+      - sed -i 's|\(bash .*/build_and_push.sh\)) |\1 |' docker_python/scripts/build_and_push.sh
   build:
     commands:
       - echo "inside build commands and printing all environment variables below"
       - printenv
       - echo `pwd`
-      - sed -i 's/\r$//' docker_python/scripts/build_and_push.sh
+      - bash $CODEBUILD_SRC_DIR/docker_python/scripts/build_and_push.sh $DOCKER_IMAGE_NAME
 
