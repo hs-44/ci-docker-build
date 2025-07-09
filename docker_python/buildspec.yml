@@ -9,6 +9,7 @@ phases:
   install:
     commands:
       - apt-get update -y && apt-get install -y git
+      - apt-get update -y && apt-get install -y dos2unix
   pre_build:
     commands:
       - echo "This is Codecommit Repo URL - $CODEBUILD_SOURCE_REPO_URL"
@@ -21,6 +22,8 @@ phases:
       - echo "This is Codecommit Repo Name - $REPO_NAME"
       - echo "This is the CODEBUILD_SRC_DIR - $CODEBUILD_SRC_DIR"
       - echo "This is the commit id from Source Control - $CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - chmod +x docker_python/scripts/build_and_push.sh
+
   build:
     commands:
       - echo "inside build commands and printing all environment variables below"
