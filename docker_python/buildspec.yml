@@ -29,5 +29,6 @@ phases:
       - echo "inside build commands and printing all environment variables below"
       - printenv
       - echo `pwd`
-      - ./docker_python/scripts/build_and_push.sh
+      - bash <(tr -d '\r' < docker_python/scripts/build_and_push.sh) $DOCKER_IMAGE_NAME
+
 
