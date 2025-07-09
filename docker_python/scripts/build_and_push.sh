@@ -34,7 +34,7 @@ ecr_repo_name=$DOCKER_IMAGE_NAME"-ecr-repo"
 echo "value of ecr_repo_name is $ecr_repo_name"
 
 # || means if the first command succeed the second will never be executed
-aws ecr describe-repositories --repository-names ${ecr_repo_name} || aws ecr create-repository --repository-name ${ecr_repo_name}
+aws ecr describe-repositories --repository-names ${ecr_repo_name} --region $region || aws ecr create-repository --repository-name ${ecr_repo_name}
 
 image_name=$DOCKER_IMAGE_NAME-$CODEBUILD_BUILD_NUMBER
 
