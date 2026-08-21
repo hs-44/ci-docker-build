@@ -2,31 +2,59 @@ version: 0.2
 
 env:
   variables:
-    # SDLC_ENVIRONMENT: "$1"
-    DOCKER_IMAGE_NAME: "$1"
-    # GIT_REPO: "https://git-codecommit.us-east-1.amazonaws.com/v1/repos/dockerecrtestbuild"
+    DOCKER_IMAGE_NAME: "python_webapp_today"
+
 phases:
+
   install:
     commands:
-      - apt-get update -y && apt-get install -y git
+      - echo "Installing required packages..."
+      - apt-get update -y
+      - apt-get install -y git dos2unix
+
   pre_build:
     commands:
-      - echo "This is Codecommit Repo URL - $CODEBUILD_SOURCE_REPO_URL"
-      - |
-        REPO_NAME=$(echo "$CODEBUILD_SOURCE_REPO_URL" | awk -F "/" '{print $NF}')
-        BRANCH_NAME=$(echo "$CODEBUILD_SOURCE_VERSION" | awk -F "/" '{print $NF}')
-        echo "BRANCH_NAME is : $BRANCH_NAME"
-        echo "CODEBUILD_SOURCE_REPO_URL is : $CODEBUILD_SOURCE_REPO_URL"
-        echo "CODEBUILD_SOURCE_VERSION is : $CODEBUILD_SOURCE_VERSION"
-      - echo "This is Codecommit Repo Name - $REPO_NAME"
-      - echo "This is the CODEBUILD_SRC_DIR - $CODEBUILD_SRC_DIR"
-      - echo "This is the commit id from Source Control - $CODEBUILD_RESOLVED_SOURCE_VERSION"
-      - echo "Fixing incorrect command syntax in script..."
-      - sed -i 's|\(bash .*/build_and_push.sh\)) |\1 |' docker_python/scripts/build_and_push.sh
+      - echo "========================================"
+      - echo "CodeBuild Pre-Build"
+      - echo "========================================"
+
+      - echo "Repository URL: $CODEBUILD_SOURCE_REPO_URL"
+      - echo "Source Version: $CODEBUILD_SOURCE_VERSION"
+      - echo "Resolved Source Version: $CODEBUILD_RESOLVED_SOURCE_VERSION"
+      - echo "CodeBuild Source Directory: $CODEBUILD_SRC_DIR"
+      - echo "AWS Region: $AWS_REGION"
+      - echo "Docker Image Name: $DOCKER_IMAGE_NAME"
+
+      - echo "Converting shell script to Linux line endings..."
+      - dos2unix "$CODEBUILD_SRC_DIR/docker_python/scripts/build_and_push.sh"
+
+      - echo "Checking build_and_push.sh..."
+      - ls -la "$CODEBUILD_SRC_DIR/docker_python/scripts/"
+      - head -n 5 "$CODEBUILD_SRC_DIR/docker_python/scripts/build_and_push.sh"
+
+      - chmod +x "$CODEBUILD_SRC_DIR/docker_python/scripts/build_and_push.sh"
+
   build:
     commands:
-      - echo "inside build commands and printing all environment variables below"
-      - printenv
-      - echo `pwd`
-      - bash $CODEBUILD_SRC_DIR/docker_python/scripts/build_and_push.sh $DOCKER_IMAGE_NAME
+      - echo "========================================"
+      - echo "Build Phase"
+      - echo "========================================"
 
+      - echo "Current directory:"
+      - pwd
+
+      - echo "Docker version:"
+      - docker --version
+
+      - echo "AWS CLI version:"
+      - aws --version
+
+      - echo "Executing build_and_push.sh..."
+
+      - bash "$CODEBUILD_SRC_DIR/docker_python/scripts/build_and_push.sh" "$DOCKER_IMAGE_NAME"
+
+  post_build:
+    commands:
+      - echo "========================================"
+      - echo "Build completed"
+      - echo "========================================"
