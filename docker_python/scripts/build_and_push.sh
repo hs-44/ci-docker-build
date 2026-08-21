@@ -2,117 +2,120 @@
 
 set -e
 
-# This script builds the Docker image and pushes it to Amazon ECR.
-
-echo "Inside build_and_push.sh file"
+echo "========================================"
+echo "Inside build_and_push.sh"
+echo "========================================"
 
 DOCKER_IMAGE_NAME="$1"
 
-echo "Value of DOCKER_IMAGE_NAME is $DOCKER_IMAGE_NAME"
+echo "Value of DOCKER_IMAGE_NAME is: $DOCKER_IMAGE_NAME"
 
 if [ -z "$DOCKER_IMAGE_NAME" ]; then
     echo "Usage: $0 <image-name>"
     exit 1
 fi
 
-# Get the AWS account ID
+# Get AWS account ID
 echo "Getting AWS account ID..."
 
-account=$(aws sts get-caller-identity --query Account --output text)
+ACCOUNT=$(aws sts get-caller-identity \
+    --query Account \
+    --output text)
 
-if [ -z "$account" ]; then
-    echo "Unable to get AWS account ID"
+echo "AWS Account: $ACCOUNT"
+
+# Get AWS region
+REGION="${AWS_REGION:-${AWS_DEFAULT_REGION}}"
+
+if [ -z "$REGION" ]; then
+    echo "ERROR: AWS region is not set"
     exit 1
 fi
 
-echo "AWS Account ID: $account"
-
-# Get AWS region
-region="${AWS_REGION:-us-east-1}"
-
-echo "Region value is: $region"
+echo "AWS Region: $REGION"
 
 # ECR repository name
-ecr_repo_name="${DOCKER_IMAGE_NAME}-ecr-repo"
+ECR_REPO_NAME="${DOCKER_IMAGE_NAME}-ecr-repo"
 
-echo "ECR repository name: $ecr_repo_name"
+echo "ECR Repository: $ECR_REPO_NAME"
 
 # Create ECR repository if it doesn't exist
 echo "Checking ECR repository..."
 
 if aws ecr describe-repositories \
-    --repository-names "$ecr_repo_name" \
-    --region "$region" >/dev/null 2>&1
+    --repository-names "$ECR_REPO_NAME" \
+    --region "$REGION" > /dev/null 2>&1
 then
-    echo "ECR repository already exists: $ecr_repo_name"
+    echo "ECR repository already exists."
 else
     echo "ECR repository does not exist. Creating it..."
 
     aws ecr create-repository \
-        --repository-name "$ecr_repo_name" \
-        --region "$region"
+        --repository-name "$ECR_REPO_NAME" \
+        --region "$REGION"
 
-    echo "ECR repository created successfully"
+    echo "ECR repository created."
 fi
 
-# Docker image name
-image_name="${DOCKER_IMAGE_NAME}-${CODEBUILD_BUILD_NUMBER}"
+# Docker image tag
+IMAGE_NAME="${DOCKER_IMAGE_NAME}-${CODEBUILD_BUILD_NUMBER}"
 
-echo "Local Docker image name: $image_name"
+echo "Local Docker image: $IMAGE_NAME"
 
 # ECR registry
-ecr_registry="${account}.dkr.ecr.${region}.amazonaws.com"
+ECR_REGISTRY="${ACCOUNT}.dkr.ecr.${REGION}.amazonaws.com"
 
-echo "ECR registry: $ecr_registry"
+FULL_IMAGE_NAME="${ECR_REGISTRY}/${ECR_REPO_NAME}:${IMAGE_NAME}"
+
+echo "Full ECR image name:"
+echo "$FULL_IMAGE_NAME"
 
 # Login to ECR
-echo "Logging in to Amazon ECR..."
+echo "========================================"
+echo "Logging into Amazon ECR"
+echo "========================================"
 
-aws ecr get-login-password --region "$region" | \
-docker login \
-    --username AWS \
-    --password-stdin "$ecr_registry"
+aws ecr get-login-password --region "$REGION" | \
+    docker login \
+        --username AWS \
+        --password-stdin "$ECR_REGISTRY"
 
-echo "ECR login successful"
-
-# Full ECR image name
-fullname="${ecr_registry}/${ecr_repo_name}:${image_name}"
-
-echo "Full image name: $fullname"
+echo "ECR login successful."
 
 # Build Docker image
-echo "=========================================="
-echo "Docker build started"
-echo "=========================================="
+echo "========================================"
+echo "Building Docker image"
+echo "========================================"
 
 docker build \
-    -t "$image_name" \
+    -t "$IMAGE_NAME" \
     "$CODEBUILD_SRC_DIR/docker_python/"
 
-echo "Docker build completed successfully"
+echo "Docker build successful."
 
 # Tag Docker image
-echo "=========================================="
+echo "========================================"
 echo "Tagging Docker image"
-echo "=========================================="
+echo "========================================"
 
-docker tag "$image_name" "$fullname"
+docker tag "$IMAGE_NAME" "$FULL_IMAGE_NAME"
 
-echo "Docker image tagged successfully"
+echo "Docker image tagged:"
+echo "$FULL_IMAGE_NAME"
 
-# Show Docker image
+# Show image
 docker images
 
-# Push image to ECR
-echo "=========================================="
-echo "Docker push started"
-echo "=========================================="
+# Push image
+echo "========================================"
+echo "Pushing Docker image to ECR"
+echo "========================================"
 
-docker push "$fullname"
+docker push "$FULL_IMAGE_NAME"
 
-echo "=========================================="
-echo "Docker push completed successfully"
-echo "=========================================="
-
-echo "Docker image successfully pushed to ECR:"
-echo "$fullname"
+echo "========================================"
+echo "Docker push successful!"
+echo "========================================"
+echo "Image:"
+echo "$FULL_IMAGE_NAME"
+echo "========================================"
